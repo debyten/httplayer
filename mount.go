@@ -6,17 +6,25 @@ import (
 	"net/http"
 )
 
+func MountRoute(mux *http.ServeMux, r Route) {
+	for _, method := range r.Methods() {
+		pattern := fmt.Sprintf("%s %s", method, r.Path())
+		mux.HandleFunc(pattern, r.Handler())
+	}
+}
+
+// Mount the provided routing definitions to `http.ServeMux` and returns it.
+func Mount(definitions ...*RoutingDefinition) *http.ServeMux {
+	return mount(definitions...)
+}
+
+// MountServices to a new http.ServeMux
 func MountServices(services ...*ServiceBuilder) *http.ServeMux {
 	mux := http.NewServeMux()
 	for _, service := range services {
 		service.MountTo(mux)
 	}
 	return mux
-}
-
-// Mount the provided routing definitions to `http.ServeMux` and returns it.
-func Mount(specs ...*RoutingDefinition) *http.ServeMux {
-	return mount(specs...)
 }
 
 // DynamicMount uses definitions to register the input routes by using the Mount function.
@@ -36,7 +44,7 @@ func listenDynamicMounts(ctx context.Context, mux *http.ServeMux, ch <-chan Rout
 		case <-ctx.Done():
 			return
 		case a := <-ch:
-			mountApi(mux, a)
+			MountRoute(mux, a)
 		}
 	}
 }
@@ -45,15 +53,8 @@ func mount(definitions ...*RoutingDefinition) *http.ServeMux {
 	mux := http.NewServeMux()
 	for _, def := range definitions {
 		for _, route := range def.Done() {
-			mountApi(mux, route)
+			MountRoute(mux, route)
 		}
 	}
 	return mux
-}
-
-func mountApi(mux *http.ServeMux, r Route) {
-	for _, method := range r.Methods() {
-		pattern := fmt.Sprintf("%s %s", method, r.Path())
-		mux.HandleFunc(pattern, r.Handler())
-	}
 }

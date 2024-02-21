@@ -31,7 +31,7 @@ func (s *ServiceBuilder) MountTo(mux *http.ServeMux) {
 	for _, service := range s.routing {
 		definition := NewDefinition(s.mws...)
 		for _, a := range service.Routes(definition) {
-			mountApi(mux, a)
+			MountRoute(mux, a)
 		}
 	}
 }
