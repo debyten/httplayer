@@ -6,6 +6,14 @@ import (
 	"net/http"
 )
 
+func MountServices(services ...*ServiceBuilder) *http.ServeMux {
+	mux := http.NewServeMux()
+	for _, service := range services {
+		service.MountTo(mux)
+	}
+	return mux
+}
+
 // Mount the provided routing definitions to `http.ServeMux` and returns it.
 func Mount(specs ...*RoutingDefinition) *http.ServeMux {
 	return mount(specs...)
