@@ -58,3 +58,11 @@ func mount(definitions ...*RoutingDefinition) *http.ServeMux {
 	}
 	return mux
 }
+
+func Merge(definitions ...*RoutingDefinition) []Route {
+	out := make([]Route, 0)
+	for _, def := range definitions {
+		out = append(out, def.Done()...)
+	}
+	return out
+}

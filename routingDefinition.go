@@ -55,6 +55,18 @@ func (m *RoutingDefinition) AddMany(methods []string, path string, h http.Handle
 	return m
 }
 
+// Detach creates a new RoutingDefinition by concatenating the current middlewares from m into
+// the newly created RoutingDefinition
+func (m *RoutingDefinition) Detach(mid ...Middleware) *RoutingDefinition {
+	allMiddleware := make([]Middleware, 0)
+	allMiddleware = append(allMiddleware, m.commonMiddleware...)
+	allMiddleware = append(allMiddleware, mid...)
+	return &RoutingDefinition{
+		commonMiddleware: allMiddleware,
+		routes:           make([]Route, 0),
+	}
+}
+
 // Done returns the slice of Route.
 func (m *RoutingDefinition) Done() []Route {
 	return m.routes

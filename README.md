@@ -126,6 +126,44 @@ func main() {
 
 ```
 
+#### Detach and Merge
+These two functions allows to group features, for example, if we define an rbac middleware like so:
+```go
+
+package main
+
+func RBAC(roles ...string) func(http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			// implementation
+		}
+	}
+}
+```
+
+Then we can use the middleware while implementing the Service:
+
+```go
+package main
+
+type statsApi struct {
+	svc StatsService
+}
+
+func (u statsApi) Routes(l *httplayer.RoutingDefinition) []httplayer.Route {
+	adminRoutes := l.Detach(RBAC("admin")).
+		Add(http.MethodPost, "/api/stats/purge", u.purgeApi)
+	    Add(http.MethodPost, "/api/stats", u.pushStatApi)
+	
+	userRoutes := l.Detach(RBAC("user", "admin")).
+		Add(http.MethodGet, "/api/stats", u.viewStatsApi).
+	    Add(http.MethodPatch, "/api/stats/{id}", u.pinStatApi)
+	return httplayer.Merge(adminRoutes, userRoutes)
+}
+```
+
+In this way we share the middlewares from `l` (which is the main routing definition)
+
 ### Mounting
 To finalize the routing setup, you can employ the following functions to mount the routes onto a `http.ServeMux`:
 - `MountRoute`: This function installs the specified route onto the provided http.ServeMux.
